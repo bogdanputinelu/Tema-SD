@@ -1,3 +1,11 @@
+/**
+Functia radixsortbaza2 primeste baza, reprezentand puterea lui 2,
+sortarea facandu-se in baza 2^baza
+sortarea nu a mai fost folosita in program/prezentata in powerpoint din cauza
+insuficientei timpului ramas pentru trimiterea proiectului
+sortarea este corecta
+**/
+
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -5,6 +13,7 @@
 #include <chrono>
 #include <algorithm>
 #include <fstream>
+#include <cmath>
 using namespace std;
 using namespace std::chrono;
 bool test(const vector<int> &v,const int &n){
@@ -198,9 +207,66 @@ void mergesort(vector<int> &v,int st,int dr){
         merge(v,st,mid,dr);
     }
 }
+void shellsortknuth(vector<int> &v, const int &n){
+    auto start=high_resolution_clock::now();
+    int i=1;
+    while(i<n/3){
+        i=i*3+1;
+    }
+    while(i>0){
+        for(int j=i;j<n;++j){
+            int k,aux=v[j];
+            for(k=j;k>=i && v[k-i]>aux;k-=i){
+                v[k]=v[k-i];
+            }
+            v[k]=aux;
+        }
+        i=(i-1)/3;
+    }
+    auto stop=high_resolution_clock::now();
+    auto duration= duration_cast<microseconds>(stop-start);
+    if(test(v,v.size()))
+        cout<<"Shellsort Knuth a sortat in:"<<duration.count()/1000000.00000000000000<<"seconds"<<endl<<endl;
+    else
+        cout<<"Shellsort Knuth nu a sortat bine"<<endl<<endl;
+}
+void radixsortbaza2(vector<int> &v,const int &n,const int &baza){
+    auto start=high_resolution_clock::now();
+    int putere=(int)pow(2,baza);
+    int max=v[0],i,bucket[putere],p=0;
+    vector<int> aux;
+    aux.reserve(n);
+    for(i=1;i< n;i++)
+        if(max<v[i])
+            max=v[i];
+    while(max){
+        for(i=0;i<putere;++i)
+            bucket[i]=0;
+        for(i=0;i<n;++i){
+            bucket[(v[i]>>p)&(putere-1)]++;
+        }
+        for(i=1;i<putere;++i){
+            bucket[i]+=bucket[i-1];
+        }
+        for(i=n-1;i>=0;--i){
+            aux[bucket[(v[i]>>p)&(putere-1)]-1]=v[i];
+            bucket[(v[i]>>p)&(putere-1)]--;
+        }
+        for(i=0;i<n;++i)
+            v[i]=aux[i];
+        p+=baza;
+        max/=putere;
+    }
+    auto stop=high_resolution_clock::now();
+    auto duration= duration_cast<microseconds>(stop-start);
+    if(test(v,v.size()))
+        cout<<"Radixsort (2^"<<baza<< ") a sortat in:"<<duration.count()/1000000.00000000000000<<"seconds"<<endl<<endl;
+    else
+        cout<<"Radixsort (2^"<<baza<<") nu a sortat bine"<<endl<<endl;
+}
 int main() {
-    ifstream f("D:\\un alt proiect c++\\input.in");
-    //ifstream f("input.in");
+    //ifstream f("D:\\un alt proiect c++\\input.in");
+    ifstream f("input.in");
     int teste,max,elemente;
     if(f.is_open()) {
         vector<int> v, vect;
@@ -209,7 +275,7 @@ int main() {
         f >> teste;
         for (int i = 0; i < teste; ++i) {
             f >> elemente >> max;
-            cout << "Testul " << i + 1 << " cu " << elemente << " numere de valoare maxima " << max << endl << endl;
+            cout << "Testul " << i + 1 << " cu " << elemente << " numere de valoare maxima " << max << endl << endl << endl;
             for (j = 0; j < elemente; ++j) {
                 v.push_back(rand() * rand() % max);
             }
@@ -231,15 +297,21 @@ int main() {
             for (j = 0; j < elemente; ++j) {
                 vect.push_back(v[j]);
             }
-            auto start1 = high_resolution_clock::now();
-            quicksortlast(vect, 0, vect.size() - 1);
-            auto stop1 = high_resolution_clock::now();
-            auto duration1 = duration_cast<microseconds>(stop1 - start1);
-            if (test(vect, vect.size()))
-                cout << "Quicksort cu pivot ultimul element a sortat in:" << duration1.count() / 1000000.00000000000000
-                     << "seconds" << endl << endl;
-            else
-                cout << "Quicksort cu pivot ultimul element nu a sortat bine" << endl << endl;
+
+            if((max==10 && elemente>=1000000) || (max==100 && elemente>=1000000) || (max==1000 && elemente>=10000000) || (max==10000 && elemente>=100000000))
+                cout<<"Quicksort cu pivot ultimul element nu poate sorta vectorul\n\n";
+            else{
+                auto start1 = high_resolution_clock::now();
+                quicksortlast(vect, 0, vect.size() - 1);
+                auto stop1 = high_resolution_clock::now();
+                auto duration1 = duration_cast<microseconds>(stop1 - start1);
+                if (test(vect, vect.size()))
+                    cout << "Quicksort cu pivot ultimul element a sortat in:" << duration1.count() / 1000000.00000000000000
+                         << "seconds" << endl << endl;
+                else
+                    cout << "Quicksort cu pivot ultimul element nu a sortat bine" << endl << endl;
+            }
+
 
             vect.clear();
             for (j = 0; j < elemente; ++j) {
@@ -286,6 +358,12 @@ int main() {
                 vect.push_back(v[j]);
             }
             shellsort(vect, vect.size());
+
+            vect.clear();
+            for (j = 0; j < elemente; ++j) {
+                vect.push_back(v[j]);
+            }
+            shellsortknuth(vect,vect.size());
 
             vect.clear();
             for (j = 0; j < elemente; ++j) {
